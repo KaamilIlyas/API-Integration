@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
+    />
+    <style>
+      .rem {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2/dist/jquery.min.js"></script>
+    <title>Assignment2</title>
+  </head>
+  <body>
+    <section style="text-align: center">
+      <div class="users">
+        <table class="table table-hover" id="tab">
+          <thead>
+            <tr class="header" onclick="Sorting()">
+              <th>id</th>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>CRUD</th>
+            </tr>
+          </thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+      <div class="part2">
+        <button class="btn btn-primary" onclick="view()">View Form</button>
+        <button class="btn btn-primary" onclick="hide()">Hide Form</button>
+        <div id="form">
+          <input type="text" placeholder="Id" id="iinp" disabled />
+          <input type="text" placeholder="Name" id="uinp" />
+          <input type="text" placeholder="Username" id="tinp" />
+          <input type="text" placeholder="Email" id="cinp" />
+          <button id="fbtnEdit" class="btn btn-primary" onclick="updateFun()">
+            Edit
+          </button>
+          <button id="fbtnAdd" class="btn btn-primary" onclick="addFun()">
+            Submit
+          </button>
+        </div>
+      </div>
+    </section>
+  </body>
+  <script>
+    let tbody = document.getElementById("tb");
+users = [];
+
+    $.ajax({
+      url: "https://jsonplaceholder.typicode.com/users",
+      type: "GET",
+      async: true,
+      dataType: "json",
+      success: (res) => {
+        users = res;
+        users.map((t) => {
+          addRow(t);
+        });
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
+
+    const addRow = (t) => {
+      if (t != undefined) {
+        let tr = document.createElement("tr");
+        let arr = [t.id, t.name, t.username, t.email];
+        for (let j = 0; j < 4; j++) {
+          let td = document.createElement("td");
+          td.innerText = arr[j];
+          tr.appendChild(td);
+        }
+
+        let div = document.createElement("div");
+        let btnE = document.createElement("button");
+        btnE.innerText = "Edit";
+        btnE.classList.add("btn");
+        btnE.setAttribute("onclick", "Edit(this)");
+        let btnD = document.createElement("button");
+        btnD.innerText = "Delete";
+        btnD.classList.add("btn");
+        btnD.classList.add("btn-danger");
+        btnD.setAttribute("onclick", "Del(this)");
+        div.append(btnE, btnD);
+        tr.appendChild(div);
+        tbody.append(tr);
+      }
+    };
+
+    const view = () => {
+      document.getElementById("iinp").value = "";
+      document.getElementById("uinp").value = "";
+      document.getElementById("tinp").value = "";
+      document.getElementById("cinp").value = "";
+      $("#form").removeClass("rem");
+      $("#fbtnAdd").removeClass("rem");
+      $("#fbtnEdit").addClass("rem");
+    };
+
+    const hide = () => {
+      $("#form").addClass("rem");
+    };
+
+    hide();
+
+    const Edit = (e) => {
+      view();
+      $("#fbtnAdd").addClass("rem");
+      $("#fbtnEdit").removeClass("rem");
+      let tr = e.parentNode.parentNode;
+      console.log(tr);
+      let inp0 = document.getElementById("iinp");
+      let inp1 = document.getElementById("uinp");
+      let inp2 = document.getElementById("tinp");
+      let inp3 = document.getElementById("cinp");
+      inp0.value = tr.children[0].innerText;
+      inp1.value = tr.children[1].innerText;
+      inp2.value = tr.children[2].innerText;
+      inp3.value = tr.children[3].innerText;
+    };
+
+    const Del = (e) => {
+      let id = e.parentNode.parentNode.children[0].innerText;
+      let url_D = "https://jsonplaceholder.typicode.com/users/" + id;
+      $.ajax({
+        url: url_D,
+        type: "DELETE",
+        async: true,
+        dataType: "json",
+        success: (res) => {
+          if (res) {
+            let iD = parseInt(id);
+            let ind = 0;
+            for (let k = 0; k < users.length; k++) {
+              if (users[k].id == iD) {
+                ind = k;
+                break;
+              }
+            }
+            let temp = users[ind];
+            users[ind] = users[users.length - 1];
+            users[users.length - 1] = temp;
+            users.pop();
+            e.parentNode.parentNode.remove();
+          }
+        },
+        error: (err) => {
+          console.log(err);
+        },
+      });
+    };
+
+    const addFun = () => {
+      let inp0 = document.getElementById("iinp");
+      let inp1 = document.getElementById("uinp");
+      let inp2 = document.getElementById("tinp");
+      let inp3 = document.getElementById("cinp");
+      if (inp1.value != "" && inp2.value != "" && inp3.value != "") {
+        obj = {
+          id: 0,
+          name: inp1.value,
+          username: inp2.value,
+          email: inp3.value,
+        };
+        let urlU = "https://jsonplaceholder.typicode.com/users";
+        $.ajax({
+          url: urlU,
+          type: "POST",
+          async: true,
+          data: obj,
+          dataType: "json",
+          success: (res) => {
+            console.log(res);
+            users.push(res);
+            addRow(res);
+          },
+          error: (err) => {
+            console.log(err);
+          },
+        });
+        hide();
+      } else {
+        alert("Fill the form");
+      }
+    };
+
+    const updateFun = () => {
+      let inp0 = document.getElementById("iinp");
+      let inp1 = document.getElementById("uinp");
+      let inp2 = document.getElementById("tinp");
+      let inp3 = document.getElementById("cinp");
+      obj = {
+        id: inp0.value,
+        name: inp1.value,
+        username: inp2.value,
+        email: inp3.value,
+      };
+
+      if (inp1.value != "" && inp2.value != "" && inp3.value != "") {
+        let urlU = "https://jsonplaceholder.typicode.com/users/" + inp0.value;
+        $.ajax({
+          url: urlU,
+          type: "PUT",
+          async: true,
+          data: obj,
+          dataType: "json",
+          success: (res) => {
+            var rows = document.getElementById("tb").children;
+            for (let i = 0; i < rows.length; i++) {
+              if (rows[i].children[0].innerText == inp0.value) {
+                rows[i].children[1].innerText = obj.name;
+                rows[i].children[2].innerText = obj.username;
+                rows[i].children[3].innerText = obj.email;
+              }
+            }
+
+            console.log(res);
+          },
+          error: (err) => {
+            console.log(err);
+          },
+        });
+        hide();
+      } else {
+        alert("Fill the form");
+      }
+    };
+
+    srt = false;
+
+    function Sorting() {
+      for (var i = 1; i < users.length; i++) {
+        var current = users[i];
+        var j = i - 1;
+        if (!srt) {
+          while (j >= 0 && users[j].id < current.id) {
+            users[j + 1] = users[j];
+            j--;
+          }
+        } else if (srt) {
+          while (j >= 0 && users[j].id > current.id) {
+            users[j + 1] = users[j];
+            j--;
+          }
+        }
+        users[j + 1] = current;
+      }
+      if (srt) {
+        srt = false;
+      } else if (!srt) {
+        srt = true;
+      }
+      $("#tb").children().remove();
+      users.map((t) => {
+        addRow(t);
+      });
+    }
+  
+  </script>
+</html>
